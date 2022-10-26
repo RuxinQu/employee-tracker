@@ -45,9 +45,7 @@ const roleQuestion = [
         type: "list",
         name: "role-department",
         message: "Which department does the role belong to?",
-        choices: [
-
-        ]
+        choices: []
     }
 ]
 
@@ -72,17 +70,13 @@ const employeeQuestion = [
         type: "list",
         name: "employee-role",
         message: "What's the employee's role?",
-        choices: [
-            //get this from the database
-        ]
+        choices: []
     },
     {
         type: "list",
         name: "employee-manager",
         message: "Who is the employee's manager?",
-        choices: [
-            //get this from the database
-        ]
+        choices: []
     }
 ]
 
