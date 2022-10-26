@@ -18,43 +18,63 @@ const printTitle = () => {
     console.log('\x1b[36m%s\x1b[0m', '==============================');
 }
 
-const ViewDepartments = () => {
-    db.promise().query('SELECT * FROM department')
-        .then(result => {
-            console.table(result[0]);
-            menu();
-        })
-        .catch(err => console.error(err));
-};
-
-const ViewRoles = () => {
-    db.promise().query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON department.id = role.department_id')
-    .then(result => {
+const ViewDepartments = async () => {
+    try {
+        const result = await db.promise().query('SELECT * FROM department')
         console.table(result[0]);
         menu();
-    })
-    .catch(err => console.error(err));
+    }
+    catch (error) {
+        console.error(error);
+    }
 };
 
-const ViewEmployees = () => {
-    db.promise().query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ' ,manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON department.id = role.department_id LEFT JOIN employee  manager ON manager.id = employee.manager_id;")
-    .then(result => {
+const ViewRoles = async () => {
+    try {
+        const result = await db.promise().query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON department.id = role.department_id')
         console.table(result[0]);
         menu();
-    })
-    .catch(err => console.error(err));
+    }
+    catch (error) {
+        console.error(error);
+    }
 };
 
-const addDepartment = (data) => {
-    const queryStr = `INSERT INTO department(name) VALUES (?);`;
-    db.query(queryStr, [data.name], (err) =>
-        err ? console.log(err) : console.log('\x1b[33m%s\x1b[0m', `${data.name} department added`));
-}
+const ViewEmployees = async () => {
+    try {
+        const result = await db.promise().query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ' ,manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON department.id = role.department_id LEFT JOIN employee  manager ON manager.id = employee.manager_id;")
+        console.table(result[0]);
+        menu();
+    }
+    catch (error) {
+        console.error(error);
+    }
+};
 
-const addRole = (data) => {
-    const queryStr = ' name FROM department'
-    const departmentArr = db.query(queryStr);
-    console.log(departmentArr)
+const addDepartment = async () => {
+    try {
+        const answer = await inquirer.prompt(departmentQuestion);
+        const queryStr = `INSERT INTO department(name) VALUES (?);`;
+        await db.promise().query(queryStr, answer.name)
+        console.log('\x1b[33m%s\x1b[0m', `${answer.name} department added`);
+        menu();
+    } catch (error) {
+        console.error(error);
+    }
+};
+
+const addRole = async () => {
+    try {
+        const dep = await db.promise().query('SELECT * FROM department');
+        const depList = dep[0].map(ele=>ele.name);
+        const newRole = await inquirer.prompt(roleQuestion(depList));
+        const getDepId = await db.promise().query(`SELECT id FROM department WHERE name = ?;`,newRole['department']);
+        await db.promise().query(`INSERT INTO role(title, salary, department_id) VALUES (?,?,?);`,[newRole.name,newRole.salary,getDepId[0][0].id])
+        console.log('\x1b[33m%s\x1b[0m', ` new role ${newRole.name} added`);
+        menu();
+    } catch (error) {
+        console.error(error);
+    }
 }
 
 const choices = (result) => {
@@ -74,8 +94,6 @@ const choices = (result) => {
         case 'Add a role':
             addRole();
             break;
-        
-            
     }
 }
 
@@ -87,3 +105,5 @@ async function menu() {
 
 printTitle();
 menu();
+
+

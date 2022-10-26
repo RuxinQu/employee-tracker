@@ -16,38 +16,40 @@ const menuQuestion = [
 
 const departmentQuestion = [{
     type: "input",
-    name: "department-name",
+    name: "name",
     message: "What is the name of the department?",
     validate: function (input) {
         return !!input || "Please enter the name of the department!";
     }
 }]
 
-const roleQuestion = [
-    {
-        type: "input",
-        name: "role-name",
-        message: "What is the name of the role?",
-        validate: function (input) {
-            return !!input || "Please enter the name of the role!";
+const roleQuestion = (department) => {
+    return [
+        {
+            type: "input",
+            name: "name",
+            message: "What is the name of the role?",
+            validate: function (input) {
+                return !!input || "Please enter the name of the role!";
+            }
+        },
+        {
+            type: "input",
+            name: "salary",
+            message: "What is the salary of the role?",
+            validate: function (input) {
+                return !!input || "Please enter the salary of the role!";
+            }
+        },
+        // fill this choice from the department list 
+        {
+            type: "list",
+            name: "department",
+            message: "Which department does the role belong to?",
+            choices: department
         }
-    },
-    {
-        type: "input",
-        name: "role-salary",
-        message: "What is the salary of the role?",
-        validate: function (input) {
-            return !!input || "Please enter the salary of the role!";
-        }
-    },
-    // fill this choice from the department list 
-    {
-        type: "list",
-        name: "role-department",
-        message: "Which department does the role belong to?",
-        choices: []
-    }
-]
+    ]
+}
 
 const employeeQuestion = [
     {
@@ -68,13 +70,13 @@ const employeeQuestion = [
     },
     {
         type: "list",
-        name: "employee-role",
+        name: "role",
         message: "What's the employee's role?",
         choices: []
     },
     {
         type: "list",
-        name: "employee-manager",
+        name: "manager",
         message: "Who is the employee's manager?",
         choices: []
     }
