@@ -65,12 +65,34 @@ const addDepartment = async () => {
 
 const addRole = async () => {
     try {
-        const dep = await db.promise().query('SELECT * FROM department');
-        const depList = dep[0].map(ele=>ele.name);
+        const getDep = await db.promise().query('SELECT * FROM department;');
+        const depList = getDep[0].map(ele => ele.name);
         const newRole = await inquirer.prompt(roleQuestion(depList));
-        const getDepId = await db.promise().query(`SELECT id FROM department WHERE name = ?;`,newRole['department']);
-        await db.promise().query(`INSERT INTO role(title, salary, department_id) VALUES (?,?,?);`,[newRole.name,newRole.salary,getDepId[0][0].id])
+        const getDepId = await db.promise().query(`SELECT id FROM department WHERE name = ?;`, newRole.department);
+        await db.promise().query(`INSERT INTO role(title, salary, department_id) VALUES (?,?,?);`, [newRole.name, newRole.salary, getDepId[0][0].id])
         console.log('\x1b[33m%s\x1b[0m', ` new role ${newRole.name} added`);
+        menu();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+const addEmployee = async () => {
+    try {
+        const getRole = await db.promise().query('SELECT * FROM role;');
+        const roleList = getRole[0].map(ele => ele.title);
+        const getManager = await db.promise().query('SELECT * FROM employee WHERE manager_id IS NULL');
+        const managerList = getManager[0].map(ele => ele.first_name + ' ' + ele.last_name);
+        managerList.unshift('None');
+        const newEmployee = await inquirer.prompt(employeeQuestion(roleList, managerList));
+        const getRoleId = await db.promise().query(`SELECT id FROM role WHERE title = ?;`, newEmployee.role);
+        if (newEmployee.manager === 'None') {
+            await db.promise().query(`INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,NULL);`, [newEmployee.first, newEmployee.last, getRoleId[0][0].id])
+        } else {
+            const getManagerId = await db.promise().query(`SELECT id FROM employee WHERE first_name = ?;`, newEmployee.manager.split(' ')[0]);
+            await db.promise().query(`INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?);`, [newEmployee.first, newEmployee.last, getRoleId[0][0].id, getManagerId[0][0].id])
+        }
+        console.log('\x1b[33m%s\x1b[0m', `new employee ${newEmployee.first} ${newEmployee.last} added`);
         menu();
     } catch (error) {
         console.error(error);
@@ -94,6 +116,12 @@ const choices = (result) => {
         case 'Add a role':
             addRole();
             break;
+        case 'Add an employee':
+            addEmployee();
+            break;
+        case 'Update an employee role':
+            updateEmployee();
+            break;
     }
 }
 
@@ -105,5 +133,4 @@ async function menu() {
 
 printTitle();
 menu();
-
 

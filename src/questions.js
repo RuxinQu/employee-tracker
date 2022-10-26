@@ -1,18 +1,17 @@
-const menuQuestion = [
-    {
-        type: "list",
-        name: "choice",
-        message: "What would you like to do?",
-        choices: [
-            "View all departments",
-            "View all roles",
-            "View all employees",
-            "Add a department",
-            "Add a role",
-            "Add an employee",
-            "Update an employee role"
-        ]
-    }]
+const menuQuestion = [{
+    type: "list",
+    name: "choice",
+    message: "What would you like to do?",
+    choices: [
+        "View all departments",
+        "View all roles",
+        "View all employees",
+        "Add a department",
+        "Add a role",
+        "Add an employee",
+        "Update an employee role"
+    ]
+}];
 
 const departmentQuestion = [{
     type: "input",
@@ -21,7 +20,7 @@ const departmentQuestion = [{
     validate: function (input) {
         return !!input || "Please enter the name of the department!";
     }
-}]
+}];
 
 const roleQuestion = (department) => {
     return [
@@ -38,10 +37,9 @@ const roleQuestion = (department) => {
             name: "salary",
             message: "What is the salary of the role?",
             validate: function (input) {
-                return !!input || "Please enter the salary of the role!";
+                return isNaN(parseInt(input)) ? "Please enter the salary as a number!" : true;
             }
         },
-        // fill this choice from the department list 
         {
             type: "list",
             name: "department",
@@ -49,37 +47,43 @@ const roleQuestion = (department) => {
             choices: department
         }
     ]
+};
+
+const employeeQuestion = (role, manager) => {
+    return [
+        {
+            type: "input",
+            name: "first",
+            message: "What's the employee's first name?",
+            validate: function (input) {
+                return !!input || "Please enter the first name!";
+            }
+        },
+        {
+            type: "input",
+            name: "last",
+            message: "What's the employee's last name?",
+            validate: function (input) {
+                return !!input || "Please enter the last name!";
+            }
+        },
+        {
+            type: "list",
+            name: "role",
+            message: "What's the employee's role?",
+            choices: role
+        },
+        {
+            type: "list",
+            name: "manager",
+            message: "Who is the employee's manager?",
+            choices: manager
+        }
+    ]
 }
 
-const employeeQuestion = [
-    {
-        type: "input",
-        name: "first-name",
-        message: "What's the employee's first name?",
-        validate: function (input) {
-            return !!input || "Please enter the first name!";
-        }
-    },
-    {
-        type: "input",
-        name: "last-name",
-        message: "What's the employee's last name?",
-        validate: function (input) {
-            return !!input || "Please enter the last name!";
-        }
-    },
-    {
-        type: "list",
-        name: "role",
-        message: "What's the employee's role?",
-        choices: []
-    },
-    {
-        type: "list",
-        name: "manager",
-        message: "Who is the employee's manager?",
-        choices: []
-    }
-]
+const update = ()=>{
+    
+}
 
 module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion }
