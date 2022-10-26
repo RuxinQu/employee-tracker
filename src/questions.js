@@ -82,8 +82,21 @@ const employeeQuestion = (role, manager) => {
     ]
 }
 
-const update = ()=>{
-    
+const updateQuestion = (employee, role) => {
+    return [
+        {
+            type: "list",
+            name: "name",
+            message: "Which employee would you like to update?",
+            choices: employee
+        },
+        {
+            type: "list",
+            name: "role",
+            message: "What role would you like to assign the selected employee?",
+            choices: role
+        }
+    ]
 }
 
-module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion }
+module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion }
