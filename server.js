@@ -4,8 +4,9 @@ const consoleTable = require('console.table');
 const util = require('util')
 const figlet = require('figlet');
 
-const { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion } = require('./src/questions');
+const { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion, budgetQuestion } = require('./src/questions');
 
+//connect the database
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',
@@ -13,7 +14,7 @@ const db = mysql.createConnection({
     database: 'employee_db',
 });
 
-//use figlet to print logo
+//use figlet to print 'Employee Tracker' logo
 const printTitle = async () => {
     const figletPromise = util.promisify(figlet.text)
     const data = await figletPromise('Employee Tracker', {
@@ -26,7 +27,7 @@ const printTitle = async () => {
     console.log(data)
 }
 
-const ViewDepartments = async () => {
+const viewAllDepartments = async () => {
     try {
         const result = await db.promise().query('SELECT * FROM department')
         console.table(result[0]);
@@ -37,7 +38,8 @@ const ViewDepartments = async () => {
     }
 };
 
-const ViewRoles = async () => {
+//get all roles and rename the department.name column
+const viewAllRoles = async () => {
     try {
         const result = await db.promise().query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON department.id = role.department_id')
         console.table(result[0]);
@@ -49,7 +51,7 @@ const ViewRoles = async () => {
 };
 
 //concat the first name and last name to and save to manager, self join the employee table to see the manager of each employee
-const ViewEmployees = async () => {
+const viewAllEmployees = async () => {
     try {
         const result = await db.promise().query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ' ,manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON department.id = role.department_id LEFT JOIN employee  manager ON manager.id = employee.manager_id;")
         console.table(result[0]);
@@ -111,7 +113,8 @@ const addEmployee = async () => {
     }
 }
 
-//get all the employee's names and all the roles and save each into an array. 
+//get all the employee's names and all the roles and save each into an array. Then prompt the user with the choices. get the name and role id from the answer,
+// then get the manager id from the role id, finally do the query to update the role id and manager id to the selected employee
 const updateEmployee = async () => {
     try {
         const getEmployee = await db.promise().query("SELECT CONCAT(first_name, ' ' ,last_name) AS name FROM employee");
@@ -130,16 +133,30 @@ const updateEmployee = async () => {
     }
 }
 
+// view budget by department, select a row from a joint table
+const viewBudget = async () => {
+    try {
+        const getDep = await db.promise().query('SELECT * FROM department;');
+        const depList = getDep[0].map(ele => ele.name);
+        const depToViewBudget = await inquirer.prompt(budgetQuestion(depList));
+        const budget = await db.promise().query('SELECT name AS department, SUM(salary) AS budget FROM (SELECT salary,department.name FROM role LEFT JOIN department ON role.department_id = department.id) AS dep_role WHERE dep_role.name = (?);', depToViewBudget.name)
+        console.table(budget[0])
+        menu();
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 const choices = (result) => {
     switch (result.choice) {
         case 'View all departments':
-            ViewDepartments();
+            viewAllDepartments();
             break;
         case 'View all roles':
-            ViewRoles();
+            viewAllRoles();
             break;
         case 'View all employees':
-            ViewEmployees();
+            viewAllEmployees();
             break;
         case 'Add a department':
             addDepartment();
@@ -152,6 +169,12 @@ const choices = (result) => {
             break;
         case 'Update an employee role':
             updateEmployee();
+            break;
+        case 'View budget':
+            viewBudget();
+            break;
+        default:
+            console.log('Error');
             break;
     }
 }
