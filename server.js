@@ -1,7 +1,9 @@
 const mysql = require('mysql2');
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
+const util = require('util')
 const figlet = require('figlet');
+
 const { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion } = require('./src/questions');
 
 const db = mysql.createConnection({
@@ -12,21 +14,18 @@ const db = mysql.createConnection({
 });
 
 //use figlet to print logo
-const printTitle = () => {
-    figlet.text('Employee Tracker', {
+const printTitle = async () => {
+    const figletPromise = util.promisify(figlet.text)
+    const data = await figletPromise('Employee Tracker', {
         font: 'Ghost',
         horizontalLayout: 'default',
         verticalLayout: 'default',
         width: 100,
         whitespaceBreak: true
-    }, function (err, data) {
-        if (err) {
-            console.log('Something went wrong...');
-            console.dir(err);
-            return;
-        }
-        console.log(data);
-    });
+
+    })
+    console.log(data)
+
 }
 
 const ViewDepartments = async () => {
@@ -160,13 +159,13 @@ const choices = (result) => {
     }
 }
 
-async function menu() {
+const menu = async () => {
     const result = await inquirer.prompt(menuQuestion);
     choices(result);
 }
+const start = async () => {
+    await printTitle();
+    menu();
+}
 
-
-printTitle()
-// menu();
-updateEmployee();
-
+start()
