@@ -22,10 +22,8 @@ const printTitle = async () => {
         verticalLayout: 'default',
         width: 100,
         whitespaceBreak: true
-
     })
     console.log(data)
-
 }
 
 const ViewDepartments = async () => {
@@ -121,13 +119,12 @@ const updateEmployee = async () => {
         const getRole = await db.promise().query('SELECT * FROM role;');
         const roleList = getRole[0].map(ele => ele.title);
         const updatedEmployee = await inquirer.prompt(updateQuestion(employeeList, roleList))
-        const getRoleId = await db.promise().query('SELECT id FROM role WHERE title = (?)', updatedEmployee.role)
+        const getRoleId = await db.promise().query('SELECT id FROM role WHERE title = (?);', updatedEmployee.role)
         const firstName = updatedEmployee.name.split(' ')[0]
-        const getManagerId = await db.promise().query('SELECT id FROM employee WHERE role_id = (?) AND manager_id IS NULL', getRoleId[0][0].id)
-        console.log(getManagerId)
-        // await db.promise().query('UPDATE employee SET role_id = (?) WHERE first_name = (?);', [getRoleId[0][0].id, firstName])
-        // console.log('\x1b[33m%s\x1b[0m', `updated employee ${updatedEmployee.name}`);
-        // menu();
+        const getManagerId = await db.promise().query('SELECT manager_id FROM employee WHERE role_id = (?);', getRoleId[0][0].id)
+        await db.promise().query('UPDATE employee SET role_id = (?), manager_id = (?) WHERE first_name = (?);', [getRoleId[0][0].id, getManagerId[0][0].manager_id, firstName])
+        console.log('\x1b[33m%s\x1b[0m', `updated employee ${updatedEmployee.name}`);
+        menu();
     } catch (error) {
         console.error(error);
     }
