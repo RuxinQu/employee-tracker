@@ -9,7 +9,8 @@ const menuQuestion = [{
         "Add a department",
         "Add a role",
         "Add an employee",
-        "Update an employee role"
+        "Update an employee role",
+        "View budget"
     ]
 }];
 
@@ -99,4 +100,15 @@ const updateQuestion = (employee, role) => {
     ]
 }
 
-module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion }
+const budgetQuestion = (department) => {
+    return [
+        {
+            type: "list",
+            name: "name",
+            message: "Which department would you like to view?",
+            choices: department
+        }
+    ]
+}
+
+module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion, budgetQuestion }
