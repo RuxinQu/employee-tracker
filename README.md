@@ -27,7 +27,7 @@ This terminal project tracks the departments, roles and employees in the databas
 2. choose "*View all departments*", "*View all roles*" or "*View all employees*", the user will be presented with all the department, roles or employees.
 3. choose "*View budget*", the user can select a department and see the combined salary of that department.
 4. choose "*Add a department*", "*Add a role*","*Add an employee*", the user can answer the prompts and add new data to the database.
-5. choose "*Update an employee role*", the user can select an employee and change his/her role.
+5. choose "*Update an employee role*", the user can select an employee and change the role.
 6. choose "*Delete a department*" the user can delete a department.
 7. choose "*Quit*" the user can quit the program.
 
@@ -47,6 +47,5 @@ This project is under MIT license
 - [figlet](https://www.npmjs.com/package/figlet) is used to print the ascii text.
 
 ## Question
-My github profile: https://github.com/ruxinqu
 
  Contact me via: ruxinqu@gmail.com if you have addition questions.
