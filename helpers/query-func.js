@@ -71,10 +71,13 @@ const addDepartment = async () => {
 //get the id from the selected department based on the name, then insert the new role to the role table
 const addRole = async () => {
     try {
-        const getDep = await db.promise().query('SELECT * FROM department;');
-        const depList = getDep[0].map(({ id, name }) => ({ name: name, value: id }));
+        //destructure the array from the resolved promise
+        const [getDep] = await db.promise().query('SELECT * FROM department;');
+        //create a new object with keys name and value
+        const depList = getDep.map(({ id, name }) => ({ name: name, value: id }));
         const newRole = await inquirer.prompt(roleQuestion(depList));
-        await db.promise().query(`INSERT INTO role(title, salary, department_id) VALUES (?,?,?);`, [newRole.name, newRole.salary, newRole.department])
+        const roleObj = {title: newRole.name, salary: newRole.salary, department_id: newRole.department} 
+        await db.promise().query(`INSERT INTO role SET ?`,roleObj)
         console.log('\x1b[33m%s\x1b[0m', ` new role ${newRole.name} added`);
     } catch (error) {
         console.error(error);
@@ -85,15 +88,14 @@ const addRole = async () => {
 //manager isn't None) and insert the new employee to employee table
 const addEmployee = async () => {
     try {
-        const getRole = await db.promise().query('SELECT * FROM role;');
-        const roleList = getRole[0].map(({ id, title }) => ({ name: title, value: id }));
-        const getManager = await db.promise().query('SELECT * FROM employee WHERE manager_id IS NULL');
-        const managerList = getManager[0].map(({ first_name, last_name, id }) => ({ name: first_name + ' ' + last_name, value: id }));
-        managerList.unshift('None');
+        const [getRole] = await db.promise().query('SELECT * FROM role;');
+        const roleList = getRole.map(({ id, title }) => ({ name: title, value: id }));
+        const [getManager] = await db.promise().query('SELECT * FROM employee WHERE manager_id IS NULL');
+        const managerList = getManager.map(({ first_name, last_name, id }) => ({ name: first_name + ' ' + last_name, value: id }));
+        managerList.unshift({name :'None', value: null});
         const newEmployee = await inquirer.prompt(employeeQuestion(roleList, managerList));
-        newEmployee.manager === 'None'
-            ? await db.promise().query(`INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,NULL);`, [newEmployee.first, newEmployee.last, newEmployee.role])
-            : await db.promise().query(`INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?);`, [newEmployee.first, newEmployee.last, newEmployee.role, newEmployee.manager])
+        const newEmployeeObj = {first_name:newEmployee.first, last_name : newEmployee.last, role_id: newEmployee.role, manager_id: newEmployee.manager }
+        await db.promise().query(`INSERT INTO employee SET ?;`, newEmployeeObj);
         console.log('\x1b[33m%s\x1b[0m', `new employee ${newEmployee.first} ${newEmployee.last} added`);
     } catch (error) {
         console.error(error);
@@ -104,10 +106,10 @@ const addEmployee = async () => {
 // then get the manager id from the role id, finally do the query to update the role id and manager id to the selected employee
 const updateEmployee = async () => {
     try {
-        const getEmployee = await db.promise().query("SELECT * FROM employee");
-        const employeeList = getEmployee[0].map(({ first_name, last_name, id }) => ({ name: first_name + ' ' + last_name, value: id }));
-        const getRole = await db.promise().query('SELECT * FROM role;');
-        const roleList = getRole[0].map(({ id, title }) => ({ name: title, value: id }));
+        const [getEmployee] = await db.promise().query("SELECT * FROM employee");
+        const employeeList = getEmployee.map(({ first_name, last_name, id }) => ({ name: first_name + ' ' + last_name, value: id }));
+        const [getRole] = await db.promise().query('SELECT * FROM role;');
+        const roleList = getRole.map(({ id, title }) => ({ name: title, value: id }));
         const updatedEmployee = await inquirer.prompt(updateQuestion(employeeList, roleList));
         await db.promise().query('UPDATE employee SET role_id = (?) WHERE id = (?);', [updatedEmployee.role, updatedEmployee.name])
         console.log('\x1b[33m%s\x1b[0m', 'employee updated');
@@ -118,8 +120,8 @@ const updateEmployee = async () => {
 
 //choose a departmen to delete 
 const deleteDep = async () => {
-    const getDep = await db.promise().query('SELECT * FROM department;');
-    const depList = getDep[0].map(ele => ele.name);
+    const [getDep] = await db.promise().query('SELECT * FROM department;');
+    const depList = getDep.map(ele => ele.name);
     const depToDelete = await inquirer.prompt(selectDepQuestion(depList, 'delete'));
     const confirm = await inquirer.prompt(deleteConfirm())
     if (confirm.confirm === 'y') {
