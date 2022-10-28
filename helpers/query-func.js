@@ -126,7 +126,6 @@ const deleteDep = async () => {
         await db.promise().query('DELETE FROM department WHERE name = (?)', depToDelete.name);
         console.log('\x1b[33m%s\x1b[0m', `${depToDelete.name} department is deleted`);
     }
-    menu();
 }
 
 
