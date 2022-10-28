@@ -1,18 +1,11 @@
-const mysql = require('mysql2');
+
 const inquirer = require('inquirer');
 const consoleTable = require('console.table');
 const util = require('util')
 const figlet = require('figlet');
 
-const { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion, budgetQuestion } = require('./src/questions');
-
-//connect the database
-const db = mysql.createConnection({
-    host: 'localhost',
-    user: 'root',
-    password: '',
-    database: 'employee_db',
-});
+const { menuQuestion } = require('./helpers/questions')
+const { db, viewAllDepartments, viewAllRoles, viewAllEmployees, viewBudget, addDepartment, addRole, addEmployee, updateEmployee, deleteDep } = require('./helpers/query-func')
 
 //use figlet to print 'Employee Tracker' logo
 const printTitle = async () => {
@@ -27,151 +20,46 @@ const printTitle = async () => {
     console.log(data)
 }
 
-const viewAllDepartments = async () => {
-    try {
-        const result = await db.promise().query('SELECT * FROM department')
-        console.table(result[0]);
-        menu();
-    }
-    catch (error) {
-        console.error(error);
-    }
-};
-
-//get all roles and rename the department.name column
-const viewAllRoles = async () => {
-    try {
-        const result = await db.promise().query('SELECT role.id, role.title, department.name AS department, role.salary FROM role LEFT JOIN department ON department.id = role.department_id')
-        console.table(result[0]);
-        menu();
-    }
-    catch (error) {
-        console.error(error);
-    }
-};
-
-//concat the first name and last name to and save to manager, self join the employee table to see the manager of each employee
-const viewAllEmployees = async () => {
-    try {
-        const result = await db.promise().query("SELECT employee.id, employee.first_name, employee.last_name, role.title, department.name AS department, role.salary, CONCAT(manager.first_name, ' ' ,manager.last_name) AS manager FROM employee LEFT JOIN role ON employee.role_id = role.id LEFT JOIN department ON department.id = role.department_id LEFT JOIN employee  manager ON manager.id = employee.manager_id;")
-        console.table(result[0]);
-        menu();
-    }
-    catch (error) {
-        console.error(error);
-    }
-};
-
-const addDepartment = async () => {
-    try {
-        const newDep = await inquirer.prompt(departmentQuestion);
-        await db.promise().query(`INSERT INTO department(name) VALUES (?);`, newDep.name)
-        console.log('\x1b[33m%s\x1b[0m', `${newDep.name} department added`);
-        menu();
-    } catch (error) {
-        console.error(error);
-    }
-};
-
-//get all the departments from the bd and save all the names into an array. Then use the array as choices for inquirer. After all the prompts are answered,
-//get the id from the selected department based on the name, then insert the new role to the role table
-const addRole = async () => {
-    try {
-        const getDep = await db.promise().query('SELECT * FROM department;');
-        const depList = getDep[0].map(ele => ele.name);
-        const newRole = await inquirer.prompt(roleQuestion(depList));
-        const getDepId = await db.promise().query(`SELECT id FROM department WHERE name = ?;`, newRole.department);
-        await db.promise().query(`INSERT INTO role(title, salary, department_id) VALUES (?,?,?);`, [newRole.name, newRole.salary, getDepId[0][0].id])
-        console.log('\x1b[33m%s\x1b[0m', ` new role ${newRole.name} added`);
-        menu();
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-//get all the roles and managers from database then save each of them into an array. use these two arrays as choices for prompt. Then get id for the selected role and manager(if 
-//manager isn't None) and insert the new employee to employee table
-const addEmployee = async () => {
-    try {
-        const getRole = await db.promise().query('SELECT * FROM role;');
-        const roleList = getRole[0].map(ele => ele.title);
-        const getManager = await db.promise().query('SELECT * FROM employee WHERE manager_id IS NULL');
-        const managerList = getManager[0].map(ele => ele.first_name + ' ' + ele.last_name);
-        managerList.unshift('None');
-        const newEmployee = await inquirer.prompt(employeeQuestion(roleList, managerList));
-        const getRoleId = await db.promise().query(`SELECT id FROM role WHERE title = ?;`, newEmployee.role);
-        if (newEmployee.manager === 'None') {
-            await db.promise().query(`INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,NULL);`, [newEmployee.first, newEmployee.last, getRoleId[0][0].id])
-        } else {
-            const getManagerId = await db.promise().query(`SELECT id FROM employee WHERE first_name = ?;`, newEmployee.manager.split(' ')[0]);
-            await db.promise().query(`INSERT INTO employee(first_name, last_name, role_id, manager_id) VALUES (?,?,?,?);`, [newEmployee.first, newEmployee.last, getRoleId[0][0].id, getManagerId[0][0].id])
-        }
-        console.log('\x1b[33m%s\x1b[0m', `new employee ${newEmployee.first} ${newEmployee.last} added`);
-        menu();
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-//get all the employee's names and all the roles and save each into an array. Then prompt the user with the choices. get the name and role id from the answer,
-// then get the manager id from the role id, finally do the query to update the role id and manager id to the selected employee
-const updateEmployee = async () => {
-    try {
-        const getEmployee = await db.promise().query("SELECT CONCAT(first_name, ' ' ,last_name) AS name FROM employee");
-        const employeeList = getEmployee[0].map(ele => ele.name);
-        const getRole = await db.promise().query('SELECT * FROM role;');
-        const roleList = getRole[0].map(ele => ele.title);
-        const updatedEmployee = await inquirer.prompt(updateQuestion(employeeList, roleList))
-        const getRoleId = await db.promise().query('SELECT id FROM role WHERE title = (?);', updatedEmployee.role)
-        const firstName = updatedEmployee.name.split(' ')[0]
-        const getManagerId = await db.promise().query('SELECT manager_id FROM employee WHERE role_id = (?);', getRoleId[0][0].id)
-        await db.promise().query('UPDATE employee SET role_id = (?), manager_id = (?) WHERE first_name = (?);', [getRoleId[0][0].id, getManagerId[0][0].manager_id, firstName])
-        console.log('\x1b[33m%s\x1b[0m', `updated employee ${updatedEmployee.name}`);
-        menu();
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-// view budget by department, select a row from a joint table
-const viewBudget = async () => {
-    try {
-        const getDep = await db.promise().query('SELECT * FROM department;');
-        const depList = getDep[0].map(ele => ele.name);
-        const depToViewBudget = await inquirer.prompt(budgetQuestion(depList));
-        const budget = await db.promise().query('SELECT name AS department, SUM(salary) AS budget FROM (SELECT salary,department.name FROM role LEFT JOIN department ON role.department_id = department.id) AS dep_role WHERE dep_role.name = (?);', depToViewBudget.name)
-        console.table(budget[0])
-        menu();
-    } catch (error) {
-        console.error(error);
-    }
-}
-
-const choices = (result) => {
+const choices = async (result) => {
     switch (result.choice) {
         case 'View all departments':
-            viewAllDepartments();
+            await viewAllDepartments();
+            menu();
             break;
         case 'View all roles':
-            viewAllRoles();
+            await viewAllRoles();
+            menu();
             break;
         case 'View all employees':
-            viewAllEmployees();
+            await viewAllEmployees();
+            menu();
             break;
         case 'Add a department':
-            addDepartment();
+            await addDepartment();
+            menu();
             break;
         case 'Add a role':
-            addRole();
+            await addRole();
+            menu();
             break;
         case 'Add an employee':
-            addEmployee();
+            await addEmployee();
+            menu();
             break;
         case 'Update an employee role':
-            updateEmployee();
+            await updateEmployee();
+            menu();
             break;
         case 'View budget':
-            viewBudget();
+            await viewBudget();
+            menu();
+            break;
+        case 'Delete a department':
+            await deleteDep();
+            menu();
+            break;
+        case 'Quit':
+            db.end();
             break;
         default:
             console.log('Error');
@@ -183,9 +71,11 @@ const menu = async () => {
     const result = await inquirer.prompt(menuQuestion);
     choices(result);
 }
+
 const start = async () => {
     await printTitle();
     menu();
 }
 
-start()
+start();
+
