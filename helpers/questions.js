@@ -6,11 +6,13 @@ const menuQuestion = [{
         "View all departments",
         "View all roles",
         "View all employees",
+        "View budget",
         "Add a department",
         "Add a role",
         "Add an employee",
         "Update an employee role",
-        "View budget"
+        "Delete a department",
+        "Quit"
     ]
 }];
 
@@ -100,15 +102,28 @@ const updateQuestion = (employee, role) => {
     ]
 }
 
-const budgetQuestion = (department) => {
+const selectDepQuestion = (department, option) => {
     return [
         {
             type: "list",
             name: "name",
-            message: "Which department would you like to view?",
+            message: `Which department would you like to ${option}?`,
             choices: department
         }
     ]
 }
 
-module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion, budgetQuestion }
+const deleteConfirm = () => {
+    return [
+        {
+            type: "input",
+            name: "confirm",
+            message: "Delete the department will also delete the roles and employees inside it, are you sure you want to delete it? (y/n)",
+            validate: function (input) {
+                return !!input || "Please make a choice!";
+            }
+        },
+    ]
+}
+
+module.exports = { menuQuestion, departmentQuestion, roleQuestion, employeeQuestion, updateQuestion, selectDepQuestion, deleteConfirm }
