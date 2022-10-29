@@ -113,12 +113,12 @@ const selectDepQuestion = (department, option) => {
     ]
 }
 
-const deleteConfirm = () => {
+const deleteConfirm = (depToDelete) => {
     return [
         {
             type: "input",
             name: "confirm",
-            message: "Delete the department will also delete the roles and employees inside it, are you sure you want to delete it? (y/n)",
+            message: `Delete ${depToDelete} department? All roles and employees inside will be deleted too. (y/n)`,
             validate: function (input) {
                 return !!input || "Please make a choice!";
             }
