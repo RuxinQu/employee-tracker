@@ -126,8 +126,6 @@ const deleteDep = async () => {
     const confirm = await inquirer.prompt(deleteConfirm(depToDelete.name))
     if (confirm.confirm === 'y') {
         await db.promise().query('DELETE FROM department WHERE name = (?)', depToDelete.name);
-        await db.promise().query('DELETE FROM role WHERE role.department_id IS NULL');
-        await db.promise().query('DELETE FROM employee WHERE employee.role_id IS NULL');        
         console.log('\x1b[33m%s\x1b[0m', `Successfully delete ${depToDelete.name} department.All roles and employees inside are deleted too`);
     }
 }
