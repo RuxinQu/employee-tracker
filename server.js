@@ -1,9 +1,10 @@
 const inquirer = require('inquirer');
 const util = require('util')
 const figlet = require('figlet');
+const consoleTable = require('console.table');
 
-const { menuQuestion } = require('./helpers/questions')
-const { db, viewAllDepartments, viewAllRoles, viewAllEmployees, viewBudget, addDepartment, addRole, addEmployee, updateEmployee, deleteDep } = require('./helpers/query-func')
+const question = require('./helpers/questions')
+const {db, query} = require('./helpers/query-func')
 
 //use figlet to print 'Employee Tracker' logo
 const printTitle = async () => {
@@ -21,39 +22,39 @@ const printTitle = async () => {
 const choices = async (result) => {
     switch (result.choice) {
         case 'View all departments':
-            await viewAllDepartments();
+            await query.viewAllDepartments();
             menu();
             break;
         case 'View all roles':
-            await viewAllRoles();
+            await query.viewAllRoles();
             menu();
             break;
         case 'View all employees':
-            await viewAllEmployees();
+            await query.viewAllEmployees();
             menu();
             break;
         case 'Add a department':
-            await addDepartment();
+            await query.addDepartment();
             menu();
             break;
         case 'Add a role':
-            await addRole();
+            await query.addRole();
             menu();
             break;
         case 'Add an employee':
-            await addEmployee();
+            await query.addEmployee();
             menu();
             break;
         case 'Update an employee role':
-            await updateEmployee();
+            await query.updateEmployee();
             menu();
             break;
         case 'View budget':
-            await viewBudget();
+            await query.viewBudget();
             menu();
             break;
         case 'Delete a department':
-            await deleteDep();
+            await query.deleteDep();
             menu();
             break;
         case 'Quit':
@@ -66,7 +67,7 @@ const choices = async (result) => {
 }
 
 const menu = async () => {
-    const result = await inquirer.prompt(menuQuestion);
+    const result = await inquirer.prompt(question.menuQuestion());
     choices(result);
 }
 
@@ -76,4 +77,5 @@ const start = async () => {
 }
 
 start();
+
 
